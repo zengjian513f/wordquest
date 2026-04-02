@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install:*)",
+      "Bash(python server.py)",
+      "Bash(curl -s http://localhost:5000/api/wordlists)",
+      "Bash(curl -v http://127.0.0.1:5000/api/wordlists)",
+      "Bash(curl --noproxy '*' -s http://127.0.0.1:5000/api/wordlists)",
+      "Bash(sudo ufw:*)",
+      "Bash(curl --noproxy '*' -s http://127.0.0.1:5000/api/words/sample.txt)",
+      "Bash(curl --noproxy '*' -s -I http://127.0.0.1:5000/api/words/sample.txt)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git rm:*)"
+    ]
+  }
+}

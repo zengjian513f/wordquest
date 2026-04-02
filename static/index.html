@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WordQuest - 默单词</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, "Microsoft YaHei", sans-serif;
+  background: #f0f4f8;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.container {
+  width: 100%;
+  max-width: 500px;
+  padding: 20px;
+}
+
+/* ===== 选择词库页 ===== */
+#page-select .card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  text-align: center;
+}
+
+#page-select h1 {
+  font-size: 28px;
+  margin-bottom: 8px;
+  color: #1a1a2e;
+}
+
+#page-select .subtitle {
+  color: #888;
+  margin-bottom: 24px;
+}
+
+.wordlist-btn {
+  display: block;
+  width: 100%;
+  padding: 16px;
+  margin-bottom: 12px;
+  background: #e8f4f8;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.wordlist-btn:hover {
+  border-color: #4ea8de;
+  background: #d4edfa;
+}
+
+.wordlist-btn .count {
+  float: right;
+  color: #888;
+  font-size: 14px;
+  line-height: 27px;
+}
+
+/* ===== 答题页 ===== */
+#page-quiz { display: none; }
+
+.progress-bar {
+  background: #ddd;
+  border-radius: 8px;
+  height: 8px;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4ea8de, #48bfe3);
+  border-radius: 8px;
+  transition: width 0.4s ease;
+  width: 0%;
+}
+
+.quiz-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 40px 32px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  text-align: center;
+  position: relative;
+  min-height: 320px;
+}
+
+.stats {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #888;
+  margin-bottom: 24px;
+}
+
+.chinese-word {
+  font-size: 48px;
+  font-weight: bold;
+  color: #1a1a2e;
+  margin-bottom: 32px;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.input-area {
+  position: relative;
+}
+
+#word-input {
+  width: 100%;
+  padding: 16px 20px;
+  font-size: 24px;
+  border: 3px solid #ddd;
+  border-radius: 12px;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.3s;
+  letter-spacing: 2px;
+}
+
+#word-input:focus {
+  border-color: #4ea8de;
+}
+
+#word-input.correct {
+  border-color: #2ecc71;
+  background: #eafaf1;
+}
+
+#word-input.wrong {
+  border-color: #e74c3c;
+  background: #fdf2f2;
+}
+
+.feedback {
+  margin-top: 16px;
+  font-size: 36px;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hint-btn {
+  margin-top: 20px;
+  padding: 12px 32px;
+  font-size: 16px;
+  background: #f39c12;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.hint-btn:active {
+  background: #e67e22;
+}
+
+/* ===== 结果页 ===== */
+#page-summary { display: none; }
+
+.summary-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  text-align: center;
+}
+
+.summary-card h2 {
+  font-size: 28px;
+  margin-bottom: 24px;
+  color: #1a1a2e;
+}
+
+.summary-score {
+  font-size: 64px;
+  font-weight: bold;
+  color: #2ecc71;
+  margin-bottom: 8px;
+}
+
+.summary-detail {
+  color: #666;
+  font-size: 16px;
+  margin-bottom: 24px;
+}
+
+.mistake-list {
+  text-align: left;
+  margin-top: 20px;
+}
+
+.mistake-list h3 {
+  font-size: 18px;
+  margin-bottom: 12px;
+  color: #e74c3c;
+}
+
+.mistake-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: #fdf2f2;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  font-size: 16px;
+}
+
+.mistake-item .en { font-weight: bold; color: #c0392b; }
+.mistake-item .zh { color: #666; }
+.mistake-item .times { color: #999; font-size: 13px; }
+
+.restart-btn {
+  margin-top: 24px;
+  padding: 14px 40px;
+  font-size: 18px;
+  background: #4ea8de;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.restart-btn:hover { background: #3a95cb; }
+</style>
+</head>
+<body>
+<div class="container">
+  <!-- 选择词库 -->
+  <div id="page-select">
+    <div class="card">
+      <h1>WordQuest</h1>
+      <p class="subtitle">选择一个词库开始默写吧</p>
+      <div id="wordlist-container"></div>
+    </div>
+  </div>
+
+  <!-- 答题 -->
+  <div id="page-quiz">
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+    <div class="quiz-card">
+      <div class="stats">
+        <span id="stat-progress">1 / 20</span>
+        <span id="stat-correct">✓ 0</span>
+        <span id="stat-wrong">✗ 0</span>
+      </div>
+      <div class="chinese-word" id="chinese-word">苹果</div>
+      <div class="input-area">
+        <input type="text" id="word-input" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="输入英文...">
+      </div>
+      <div class="feedback" id="feedback"></div>
+      <button class="hint-btn" id="hint-btn">按住看答案</button>
+    </div>
+  </div>
+
+  <!-- 结果 -->
+  <div id="page-summary">
+    <div class="summary-card">
+      <h2>完成！</h2>
+      <div class="summary-score" id="summary-score">95%</div>
+      <div class="summary-detail" id="summary-detail"></div>
+      <div class="mistake-list" id="mistake-list"></div>
+      <button class="restart-btn" onclick="showSelect()">再来一次</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== 状态 =====
+let queue = [];          // 待答队列 [{english, chinese, mistakes, hinted}]
+let totalOriginal = 0;   // 原始单词数
+let correctCount = 0;
+let wrongCount = 0;
+let answeredCount = 0;   // 已正确回答的不重复单词数
+let mistakeMap = {};     // english -> {chinese, count}
+
+const REVIEW_OFFSETS = [3, 7, 15]; // 错误/提示后重新插入的位置
+
+// ===== 页面切换 =====
+function showPage(id) {
+  document.getElementById("page-select").style.display = id === "select" ? "block" : "none";
+  document.getElementById("page-quiz").style.display = id === "quiz" ? "block" : "none";
+  document.getElementById("page-summary").style.display = id === "summary" ? "block" : "none";
+}
+
+// ===== 加载词库列表 =====
+async function loadWordlists() {
+  const res = await fetch("/api/wordlists");
+  const lists = await res.json();
+  const container = document.getElementById("wordlist-container");
+  container.innerHTML = "";
+  lists.forEach(wl => {
+    const btn = document.createElement("button");
+    btn.className = "wordlist-btn";
+    btn.innerHTML = `${wl.name} <span class="count">${wl.count} 词</span>`;
+    btn.onclick = () => startQuiz(wl.filename);
+    container.appendChild(btn);
+  });
+}
+
+// ===== 开始答题 =====
+async function startQuiz(filename) {
+  const res = await fetch(`/api/words/${filename}`);
+  const words = await res.json();
+
+  // 随机打乱
+  for (let i = words.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [words[i], words[j]] = [words[j], words[i]];
+  }
+
+  queue = words.map(w => ({ ...w, mistakes: 0, hinted: false }));
+  totalOriginal = words.length;
+  correctCount = 0;
+  wrongCount = 0;
+  answeredCount = 0;
+  mistakeMap = {};
+
+  showPage("quiz");
+  showCurrentWord();
+  document.getElementById("word-input").focus();
+}
+
+// ===== 显示当前单词 =====
+function showCurrentWord() {
+  if (queue.length === 0) {
+    showSummary();
+    return;
+  }
+  const word = queue[0];
+  document.getElementById("chinese-word").textContent = word.chinese;
+  const input = document.getElementById("word-input");
+  input.value = "";
+  input.className = "";
+  input.disabled = false;
+  input.focus();
+  document.getElementById("feedback").textContent = "";
+  updateStats();
+}
+
+function updateStats() {
+  document.getElementById("stat-progress").textContent = `${answeredCount} / ${totalOriginal}`;
+  document.getElementById("stat-correct").textContent = `✓ ${correctCount}`;
+  document.getElementById("stat-wrong").textContent = `✗ ${wrongCount}`;
+  const pct = totalOriginal > 0 ? (answeredCount / totalOriginal * 100) : 0;
+  document.getElementById("progress-fill").style.width = pct + "%";
+}
+
+// ===== 提交答案 =====
+function submitAnswer() {
+  const input = document.getElementById("word-input");
+  const answer = input.value.trim().toLowerCase();
+  const word = queue[0];
+  if (!answer) return;
+
+  if (answer === word.english.toLowerCase()) {
+    // 正确
+    input.className = "correct";
+    document.getElementById("feedback").textContent = "✔️";
+    correctCount++;
+    // 如果这个词曾错过或提示过，安排后续复习
+    if (word.mistakes > 0 || word.hinted) {
+      scheduleReview(word);
+    }
+    queue.shift();
+    answeredCount++;
+    updateStats();
+    setTimeout(() => showCurrentWord(), 600);
+  } else {
+    // 错误：留在当前词，不跳走
+    input.className = "wrong";
+    document.getElementById("feedback").textContent = "✘";
+    wrongCount++;
+    word.mistakes++;
+    mistakeMap[word.english] = { chinese: word.chinese, count: (mistakeMap[word.english]?.count || 0) + 1 };
+    // 1秒后清空输入框让他重试
+    input.disabled = true;
+    setTimeout(() => {
+      input.disabled = false;
+      input.value = "";
+      input.className = "";
+      document.getElementById("feedback").textContent = "";
+      input.focus();
+    }, 1000);
+  }
+}
+
+// ===== 安排复习（答对后插入后续位置）=====
+function scheduleReview(word) {
+  const newWord = { ...word, mistakes: 0, hinted: false };
+  REVIEW_OFFSETS.forEach(offset => {
+    // queue[0] 即将被 shift，所以 offset 不需要 +1
+    const pos = Math.min(offset, queue.length);
+    queue.splice(pos, 0, { ...newWord });
+  });
+}
+
+// ===== 提示功能 =====
+const hintBtn = document.getElementById("hint-btn");
+let hintActive = false;
+
+function startHint(e) {
+  e.preventDefault();
+  const word = queue[0];
+  if (!word) return;
+  hintActive = true;
+
+  // 显示答案
+  const input = document.getElementById("word-input");
+  input.value = word.english;
+  input.className = "wrong";
+
+  // 标记为已提示
+  if (!word.hinted) {
+    word.hinted = true;
+    mistakeMap[word.english] = { chinese: word.chinese, count: (mistakeMap[word.english]?.count || 0) + 1, hinted: true };
+  }
+}
+
+function endHint(e) {
+  e.preventDefault();
+  if (!hintActive) return;
+  hintActive = false;
+
+  const input = document.getElementById("word-input");
+  input.value = "";
+  input.className = "";
+  document.getElementById("feedback").textContent = "";
+  input.focus();
+}
+
+// 鼠标和触摸事件
+hintBtn.addEventListener("mousedown", startHint);
+hintBtn.addEventListener("mouseup", endHint);
+hintBtn.addEventListener("mouseleave", endHint);
+hintBtn.addEventListener("touchstart", startHint);
+hintBtn.addEventListener("touchend", endHint);
+
+// ===== 键盘事件 =====
+document.getElementById("word-input").addEventListener("keydown", e => {
+  if (e.key === "Enter") {
+    submitAnswer();
+  }
+});
+
+// ===== 显示总结 =====
+function showSummary() {
+  showPage("summary");
+
+  const total = correctCount + wrongCount;
+  const accuracy = total > 0 ? Math.round(correctCount / total * 100) : 100;
+  document.getElementById("summary-score").textContent = accuracy + "%";
+  document.getElementById("summary-detail").textContent =
+    `共 ${totalOriginal} 个单词，答对 ${correctCount} 次，答错 ${wrongCount} 次`;
+
+  const listEl = document.getElementById("mistake-list");
+  const mistakes = Object.entries(mistakeMap);
+  if (mistakes.length === 0) {
+    listEl.innerHTML = '<p style="color:#2ecc71;font-size:20px;margin-top:16px;">全部一次通过，太棒了！🎉</p>';
+  } else {
+    let html = `<h3>需要加强的单词（${mistakes.length} 个）</h3>`;
+    mistakes.sort((a, b) => b[1].count - a[1].count);
+    mistakes.forEach(([en, info]) => {
+      html += `<div class="mistake-item">
+        <span class="en">${en}</span>
+        <span class="zh">${info.chinese}</span>
+        <span class="times">错/提示 ${info.count} 次</span>
+      </div>`;
+    });
+    listEl.innerHTML = html;
+  }
+}
+
+// ===== 返回选择页 =====
+function showSelect() {
+  showPage("select");
+  loadWordlists();
+}
+
+// ===== 初始化 =====
+loadWordlists();
+</script>
+</body>
+</html>
