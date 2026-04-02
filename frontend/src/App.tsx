@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ConfigProvider } from "antd";
 import zhCN from "antd/locale/zh_CN";
 import SelectPage from "./pages/SelectPage";
@@ -7,20 +7,62 @@ import SummaryPage from "./pages/SummaryPage";
 import type { Word, QueueItem, MistakeInfo } from "./types";
 
 const REVIEW_OFFSETS = [3, 7, 15];
+const STORAGE_KEY = "wordquest_state";
 
 type Page = "select" | "quiz" | "summary";
 
+interface AppState {
+  page: Page;
+  queue: QueueItem[];
+  totalOriginal: number;
+  correctCount: number;
+  wrongCount: number;
+  answeredCount: number;
+  mistakeMap: Record<string, MistakeInfo>;
+}
+
+function loadState(): AppState | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as AppState;
+  } catch {
+    return null;
+  }
+}
+
+function clearState() {
+  localStorage.removeItem(STORAGE_KEY);
+}
+
+const saved = loadState();
+
 export default function App() {
-  const [page, setPage] = useState<Page>("select");
-  const [queue, setQueue] = useState<QueueItem[]>([]);
-  const [totalOriginal, setTotalOriginal] = useState(0);
-  const [correctCount, setCorrectCount] = useState(0);
-  const [wrongCount, setWrongCount] = useState(0);
-  const [answeredCount, setAnsweredCount] = useState(0);
-  const [mistakeMap, setMistakeMap] = useState<Record<string, MistakeInfo>>({});
+  const [page, setPage] = useState<Page>(saved?.page ?? "select");
+  const [queue, setQueue] = useState<QueueItem[]>(saved?.queue ?? []);
+  const [totalOriginal, setTotalOriginal] = useState(saved?.totalOriginal ?? 0);
+  const [correctCount, setCorrectCount] = useState(saved?.correctCount ?? 0);
+  const [wrongCount, setWrongCount] = useState(saved?.wrongCount ?? 0);
+  const [answeredCount, setAnsweredCount] = useState(saved?.answeredCount ?? 0);
+  const [mistakeMap, setMistakeMap] = useState<Record<string, MistakeInfo>>(
+    saved?.mistakeMap ?? {}
+  );
+
+  // 持久化状态
+  useEffect(() => {
+    const state: AppState = {
+      page,
+      queue,
+      totalOriginal,
+      correctCount,
+      wrongCount,
+      answeredCount,
+      mistakeMap,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }, [page, queue, totalOriginal, correctCount, wrongCount, answeredCount, mistakeMap]);
 
   function startQuiz(words: Word[]) {
-    // Fisher-Yates 洗牌
     const shuffled = [...words];
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -36,7 +78,6 @@ export default function App() {
   }
 
   function onCorrect() {
-    // 答对：直接出队（复习副本已在答错时插入）
     setQueue((prev) => prev.slice(1));
     setCorrectCount((c) => c + 1);
     setAnsweredCount((c) => c + 1);
@@ -44,13 +85,11 @@ export default function App() {
 
   function onWrong() {
     const word = queue[0];
-    // 清除队列中该词的所有旧副本，重新插入复习
     const rest = queue.slice(1);
     const cleaned = rest.filter(
       (item) => item.english.toLowerCase() !== word.english.toLowerCase()
     );
     const updated: QueueItem = { ...word, mistakes: word.mistakes + 1, hinted: false };
-    // 当前词留在队首，复习副本插入后方
     const reviewItem: QueueItem = { ...updated, mistakes: 0, hinted: false };
     for (const offset of REVIEW_OFFSETS) {
       const pos = Math.min(offset, cleaned.length);
@@ -87,6 +126,17 @@ export default function App() {
     setPage("summary");
   }
 
+  const onQuit = useCallback(() => {
+    clearState();
+    setQueue([]);
+    setTotalOriginal(0);
+    setCorrectCount(0);
+    setWrongCount(0);
+    setAnsweredCount(0);
+    setMistakeMap({});
+    setPage("select");
+  }, []);
+
   return (
     <ConfigProvider locale={zhCN}>
       <div
@@ -112,6 +162,7 @@ export default function App() {
               onWrong={onWrong}
               onHint={onHint}
               onFinish={onFinish}
+              onQuit={onQuit}
             />
           )}
           {page === "summary" && (
@@ -120,7 +171,7 @@ export default function App() {
               correctCount={correctCount}
               wrongCount={wrongCount}
               mistakeMap={mistakeMap}
-              onRestart={() => setPage("select")}
+              onRestart={onQuit}
             />
           )}
         </div>

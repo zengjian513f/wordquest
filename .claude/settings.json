@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc:*)",
+      "Bash(npm run:*)",
+      "Bash(pkill -f \"uvicorn\")",
+      "Bash(lsof -ti:5000)",
+      "Bash(xargs kill:*)",
+      "Bash(gh auth:*)",
+      "Bash(git commit -m ':*)",
+      "Bash(git push:*)",
+      "Bash(grep -E \"\\\\.\\(js|html|css\\)$\")",
+      "Bash(curl --noproxy '*' -s http://127.0.0.1:5000/)"
+    ]
+  }
+}

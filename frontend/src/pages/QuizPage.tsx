@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Card, Input, Button, Progress, Space, Typography } from "antd";
+import { Card, Input, Button, Progress, Space, Typography, Popconfirm } from "antd";
 import type { InputRef } from "antd";
 import {
   CheckCircleFilled,
@@ -7,6 +7,7 @@ import {
   EyeOutlined,
   CheckOutlined,
   CloseOutlined,
+  LogoutOutlined,
 } from "@ant-design/icons";
 import type { QueueItem } from "../types";
 
@@ -22,6 +23,7 @@ interface Props {
   onWrong: () => void;
   onHint: () => void;
   onFinish: () => void;
+  onQuit: () => void;
 }
 
 export default function QuizPage({
@@ -34,6 +36,7 @@ export default function QuizPage({
   onWrong,
   onHint,
   onFinish,
+  onQuit,
 }: Props) {
   const [inputValue, setInputValue] = useState("");
   const [feedback, setFeedback] = useState<"correct" | "wrong" | null>(null);
@@ -80,8 +83,11 @@ export default function QuizPage({
       onWrong();
       setTimeout(() => {
         setFeedback(null);
+        // 不清空输入内容，保留错误答案让他修改
         focusInput();
       }, 1000);
+      // 立即聚焦，不等 timeout
+      focusInput();
     }
   }
 
@@ -105,12 +111,28 @@ export default function QuizPage({
 
   return (
     <div>
-      <Progress
-        percent={pct}
-        showInfo={false}
-        strokeColor={{ from: "#4ea8de", to: "#48bfe3" }}
-        style={{ marginBottom: 16 }}
-      />
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+        <Progress
+          percent={pct}
+          showInfo={false}
+          strokeColor={{ from: "#4ea8de", to: "#48bfe3" }}
+          style={{ flex: 1, marginBottom: 0 }}
+        />
+        <Popconfirm
+          title="确定要退出吗？"
+          description="当前进度将会丢失"
+          onConfirm={onQuit}
+          okText="退出"
+          cancelText="继续答题"
+        >
+          <Button
+            icon={<LogoutOutlined />}
+            type="text"
+            size="small"
+            style={{ color: "#999", flexShrink: 0 }}
+          />
+        </Popconfirm>
+      </div>
       <Card style={{ borderRadius: 16, textAlign: "center", minHeight: 340 }}>
         <Space style={{ width: "100%", justifyContent: "space-between", marginBottom: 16 }}>
           <Text type="secondary">
@@ -193,6 +215,7 @@ export default function QuizPage({
         >
           按住看答案
         </Button>
+
       </Card>
     </div>
   );
