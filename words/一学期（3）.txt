@@ -1,0 +1,57 @@
+squirrel	松鼠
+rabbit	兔子
+cat	猫
+mouse (复数 mice)	老鼠
+dog	狗
+frog	青蛙
+day	白天；一天
+it	它
+nice	美好的
+has	有 (have 的第三人称单数)
+small	小的
+cute	可爱的
+that	那；那个
+they	他们；她们；它们
+tail	尾巴
+two	二；二个 (人或物)
+animal	动物
+eat	吃
+bad	坏的
+bug	虫子
+sunny	晴朗的
+sun	太阳
+windy	刮风的
+wind	风
+rainy	下雨的
+rain	雨；下雨
+cloudy	多云的
+cloud	云
+different	不同的
+weather	天气
+how	怎样；如何
+today	今天
+hat	帽子
+plant	植物
+hot	热的
+very	非常
+go to the park	去公园
+Hooray!	好极了！
+Oh, dear!	哦，天哪！
+cake	蛋糕
+candle	蜡烛
+gift	礼物
+toy plane	玩具飞机
+doll	玩具娃娃
+card	卡片
+noodles	面条
+come	来
+love	爱
+dad	爸爸
+afternoon	下午
+share	分享
+his	他的
+evening	傍晚；晚上
+ten years old	十岁
+go out	出去
+Happy birthday!	生日快乐！
+What a lovely picture!	多么可爱的一幅画啊！

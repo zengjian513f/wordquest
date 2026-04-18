@@ -1,0 +1,23 @@
+happy	开心的
+sad	伤心的
+angry	生气的
+tired	疲倦的
+boy	男孩
+girl	女孩
+I	我(___ am a boy)
+am	是(I ___ a boy)
+cold	冷
+OK	对；好；行
+find	找到
+pencil	铅笔
+too	也；太
+well	好；就这样；好啦
+now	现在
+blackboard	黑板
+look at the blackboard	看黑板
+Good morning.	上午好。
+How are you?	你好吗？
+Not so good.	不太好。
+Let's close the window.	我们把窗户关上吧
+Fine, thank you.	很好，谢谢。
+grandfather	祖父；爷爷；外公

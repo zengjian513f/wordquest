@@ -10,7 +10,30 @@
       "Bash(git commit -m ':*)",
       "Bash(git push:*)",
       "Bash(grep -E \"\\\\.\\(js|html|css\\)$\")",
-      "Bash(curl --noproxy '*' -s http://127.0.0.1:5000/)"
+      "Bash(curl --noproxy '*' -s http://127.0.0.1:5000/)",
+      "Bash(py --version)",
+      "Bash(python3 -m pip install -r /d/wordquest/requirements.txt)",
+      "Bash(python3 -V)",
+      "Bash(cmd.exe /c \"python --version && pip --version\")",
+      "Bash(cmd.exe /c \"python --version\")",
+      "Bash(cmd.exe /c \"where python\")",
+      "Bash(conda run:*)",
+      "Read(//c/Users/zj/miniconda3/**)",
+      "Read(//c/Users/zj/anaconda3/Scripts/**)",
+      "Read(//c/Users/zj/**)",
+      "Read(//c/Users/zj/anaconda3//**)",
+      "Bash(/c/Users/zj/anaconda3/python.exe --version)",
+      "Bash(/c/Users/zj/anaconda3/python.exe -m pip install -r /d/wordquest/requirements.txt)",
+      "Bash(npm install:*)",
+      "Bash(/c/Users/zj/anaconda3/python.exe server.py)",
+      "Bash(powershell.exe -Command \"New-NetFirewallRule -DisplayName 'WordQuest Port 5000' -Direction Inbound -Protocol TCP -LocalPort 5000 -Action Allow\")",
+      "Bash(curl -s http://localhost:5000/)",
+      "Bash(netstat -ano)",
+      "Bash(tasklist /FI \"PID eq 50932\" /FO LIST)",
+      "Bash(tasklist /FI \"PID eq 25904\" /FO LIST)",
+      "Bash(cmd.exe /c \"tasklist /FI \\\\\"PID eq 50932\\\\\" && tasklist /FI \\\\\"PID eq 25904\\\\\"\")",
+      "Bash(cmd.exe /c \"taskkill /PID 50932 /F & taskkill /PID 25904 /F\")",
+      "Bash(cmd.exe /c \"netstat -ano | findstr :5000 | findstr LISTENING\")"
     ]
   }
 }

@@ -1,13 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Card, Input, Button, Progress, Space, Typography, Popconfirm } from "antd";
+import { Card, Input, Button, Progress, Typography, Popconfirm } from "antd";
 import type { InputRef } from "antd";
 import {
-  CheckCircleFilled,
-  CloseCircleFilled,
-  EyeOutlined,
   CheckOutlined,
   CloseOutlined,
   LogoutOutlined,
+  EnterOutlined,
+  QuestionCircleOutlined,
 } from "@ant-design/icons";
 import type { QueueItem } from "../types";
 
@@ -39,6 +38,7 @@ export default function QuizPage({
   onQuit,
 }: Props) {
   const [inputValue, setInputValue] = useState("");
+  const prevInputRef = useRef("");
   const [feedback, setFeedback] = useState<"correct" | "wrong" | null>(null);
   const [disabled, setDisabled] = useState(false);
   const [showingHint, setShowingHint] = useState(false);
@@ -83,16 +83,15 @@ export default function QuizPage({
       onWrong();
       setTimeout(() => {
         setFeedback(null);
-        // 不清空输入内容，保留错误答案让他修改
         focusInput();
       }, 1000);
-      // 立即聚焦，不等 timeout
       focusInput();
     }
   }
 
   function handleHintStart(e: React.MouseEvent | React.TouchEvent) {
     e.preventDefault();
+    prevInputRef.current = inputValue;
     setShowingHint(true);
     setInputValue(currentWord.english);
     onHint();
@@ -102,16 +101,17 @@ export default function QuizPage({
     e.preventDefault();
     if (!showingHint) return;
     setShowingHint(false);
-    setInputValue("");
+    setInputValue(prevInputRef.current);
     focusInput();
   }
 
   const borderColor =
     feedback === "correct" ? "#52c41a" : feedback === "wrong" ? "#ff4d4f" : undefined;
+  const isNumericAnswer = /^\d+$/.test(currentWord.english.trim());
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
         <Progress
           percent={pct}
           showInfo={false}
@@ -133,8 +133,8 @@ export default function QuizPage({
           />
         </Popconfirm>
       </div>
-      <Card style={{ borderRadius: 16, textAlign: "center", minHeight: 340 }}>
-        <Space style={{ width: "100%", justifyContent: "space-between", marginBottom: 16 }}>
+      <Card style={{ borderRadius: 16, textAlign: "center" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
           <Text type="secondary">
             {answeredCount} / {dynamicTotal}
           </Text>
@@ -144,21 +144,24 @@ export default function QuizPage({
           <Text style={{ color: "#ff4d4f" }}>
             <CloseOutlined /> {wrongCount}
           </Text>
-        </Space>
+        </div>
 
-        <div
-          style={{
-            fontSize: 48,
-            fontWeight: "bold",
-            color: "#1a1a2e",
-            margin: "24px 0 32px",
-            minHeight: 64,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          {currentWord.chinese}
+        <div style={{ fontSize: 42, fontWeight: "bold", margin: "12px 0", textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center", gap: 12 }}>
+          <span style={{ color: "#1a1a2e" }}>{currentWord.chinese}</span>
+          <QuestionCircleOutlined
+            onMouseDown={handleHintStart}
+            onMouseUp={handleHintEnd}
+            onMouseLeave={handleHintEnd}
+            onTouchStart={handleHintStart}
+            onTouchEnd={handleHintEnd}
+            style={{
+              fontSize: 28,
+              color: "#bbb",
+              cursor: "pointer",
+              userSelect: "none",
+              touchAction: "none",
+            }}
+          />
         </div>
 
         <Input
@@ -170,8 +173,16 @@ export default function QuizPage({
           placeholder="输入英文..."
           size="large"
           autoComplete="off"
+          autoCorrect="off"
           autoCapitalize="none"
           spellCheck={false}
+          data-form-type="other"
+          inputMode={isNumericAnswer ? "numeric" : "email"}
+          suffix={
+            <Button type="text" onClick={handleSubmit} disabled={disabled} style={{ padding: "0 4px", fontSize: 18 }}>
+              <EnterOutlined />
+            </Button>
+          }
           style={{
             fontSize: 24,
             textAlign: "center",
@@ -187,35 +198,6 @@ export default function QuizPage({
                   : undefined,
           }}
         />
-
-        <div style={{ minHeight: 48, marginTop: 16, fontSize: 36 }}>
-          {feedback === "correct" && (
-            <CheckCircleFilled style={{ color: "#52c41a" }} />
-          )}
-          {feedback === "wrong" && (
-            <CloseCircleFilled style={{ color: "#ff4d4f" }} />
-          )}
-        </div>
-
-        <Button
-          icon={<EyeOutlined />}
-          type="primary"
-          style={{
-            marginTop: 8,
-            background: "#f39c12",
-            borderColor: "#f39c12",
-            userSelect: "none",
-            touchAction: "manipulation",
-          }}
-          onMouseDown={handleHintStart}
-          onMouseUp={handleHintEnd}
-          onMouseLeave={handleHintEnd}
-          onTouchStart={handleHintStart}
-          onTouchEnd={handleHintEnd}
-        >
-          按住看答案
-        </Button>
-
       </Card>
     </div>
   );

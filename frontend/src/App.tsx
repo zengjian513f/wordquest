@@ -62,14 +62,16 @@ export default function App() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }, [page, queue, totalOriginal, correctCount, wrongCount, answeredCount, mistakeMap]);
 
-  function startQuiz(words: Word[]) {
-    const shuffled = [...words];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  function startQuiz(words: Word[], shuffle: boolean) {
+    const ordered = [...words];
+    if (shuffle) {
+      for (let i = ordered.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [ordered[i], ordered[j]] = [ordered[j], ordered[i]];
+      }
     }
-    setQueue(shuffled.map((w) => ({ ...w, mistakes: 0, hinted: false })));
-    setTotalOriginal(shuffled.length);
+    setQueue(ordered.map((w) => ({ ...w, mistakes: 0, hinted: false })));
+    setTotalOriginal(ordered.length);
     setCorrectCount(0);
     setWrongCount(0);
     setAnsweredCount(0);
@@ -145,7 +147,6 @@ export default function App() {
           background: "#f0f4f8",
           display: "flex",
           justifyContent: "center",
-          alignItems: "center",
           fontFamily: '-apple-system, "Microsoft YaHei", sans-serif',
         }}
       >

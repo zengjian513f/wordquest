@@ -1,17 +1,18 @@
 import { useEffect, useState } from "react";
-import { Card, List, Typography, Spin } from "antd";
+import { Card, List, Typography, Spin, Switch } from "antd";
 import { BookOutlined } from "@ant-design/icons";
 import type { Word, WordlistInfo } from "../types";
 
 const { Title, Text } = Typography;
 
 interface Props {
-  onStart: (words: Word[]) => void;
+  onStart: (words: Word[], shuffle: boolean) => void;
 }
 
 export default function SelectPage({ onStart }: Props) {
   const [lists, setLists] = useState<WordlistInfo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [shuffle, setShuffle] = useState(false);
 
   useEffect(() => {
     fetch("/api/wordlists")
@@ -25,7 +26,7 @@ export default function SelectPage({ onStart }: Props) {
   async function handleSelect(filename: string) {
     const res = await fetch(`/api/words/${filename}`);
     const words: Word[] = await res.json();
-    onStart(words);
+    onStart(words, shuffle);
   }
 
   return (
@@ -34,6 +35,10 @@ export default function SelectPage({ onStart }: Props) {
         WordQuest
       </Title>
       <Text type="secondary">选择一个词库开始默写吧</Text>
+      <div style={{ marginTop: 12, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+        <Switch checked={shuffle} onChange={setShuffle} size="small" />
+        <Text type="secondary">随机顺序</Text>
+      </div>
       {loading ? (
         <div style={{ marginTop: 32 }}>
           <Spin />
