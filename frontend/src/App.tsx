@@ -18,7 +18,10 @@ interface AppState {
   correctCount: number;
   wrongCount: number;
   answeredCount: number;
-  mistakeMap: Record<string, MistakeInfo>;
+  mistakeMap: Record<number, MistakeInfo>;
+  filename?: string;
+  user?: string;
+  sourceWords: Word[];
 }
 
 function loadState(): AppState | null {
@@ -44,9 +47,12 @@ export default function App() {
   const [correctCount, setCorrectCount] = useState(saved?.correctCount ?? 0);
   const [wrongCount, setWrongCount] = useState(saved?.wrongCount ?? 0);
   const [answeredCount, setAnsweredCount] = useState(saved?.answeredCount ?? 0);
-  const [mistakeMap, setMistakeMap] = useState<Record<string, MistakeInfo>>(
+  const [mistakeMap, setMistakeMap] = useState<Record<number, MistakeInfo>>(
     saved?.mistakeMap ?? {}
   );
+  const [filename, setFilename] = useState<string | undefined>(saved?.filename);
+  const [user, setUser] = useState<string | undefined>(saved?.user);
+  const [sourceWords, setSourceWords] = useState<Word[]>(saved?.sourceWords ?? []);
 
   // 持久化状态
   useEffect(() => {
@@ -58,24 +64,37 @@ export default function App() {
       wrongCount,
       answeredCount,
       mistakeMap,
+      filename,
+      user,
+      sourceWords,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }, [page, queue, totalOriginal, correctCount, wrongCount, answeredCount, mistakeMap]);
+  }, [page, queue, totalOriginal, correctCount, wrongCount, answeredCount, mistakeMap, filename, user, sourceWords]);
 
-  function startQuiz(words: Word[], shuffle: boolean) {
-    const ordered = [...words];
+  const refreshWords = useCallback(async () => {
+    if (!filename || !user) return;
+    const res = await fetch(`/api/words/${encodeURIComponent(user)}/${encodeURIComponent(filename)}`);
+    const source: Word[] = await res.json();
+    setSourceWords(source);
+  }, [filename, user]);
+
+  function startQuiz(words: Word[], shuffle: boolean, filename: string, user: string) {
+    setSourceWords(words);
+    const indices = words.map((_, i) => i);
     if (shuffle) {
-      for (let i = ordered.length - 1; i > 0; i--) {
+      for (let i = indices.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [ordered[i], ordered[j]] = [ordered[j], ordered[i]];
+        [indices[i], indices[j]] = [indices[j], indices[i]];
       }
     }
-    setQueue(ordered.map((w) => ({ ...w, mistakes: 0, hinted: false })));
-    setTotalOriginal(ordered.length);
+    setQueue(indices.map((i) => ({ index: i, mistakes: 0, hinted: false })));
+    setTotalOriginal(indices.length);
     setCorrectCount(0);
     setWrongCount(0);
     setAnsweredCount(0);
     setMistakeMap({});
+    setFilename(filename);
+    setUser(user);
     setPage("quiz");
   }
 
@@ -86,39 +105,68 @@ export default function App() {
   }
 
   function onWrong() {
-    const word = queue[0];
+    const item = queue[0];
+    const currentIdx = item.index;
     const rest = queue.slice(1);
-    const cleaned = rest.filter(
-      (item) => item.english.toLowerCase() !== word.english.toLowerCase()
-    );
-    const updated: QueueItem = { ...word, mistakes: word.mistakes + 1, hinted: false };
-    const reviewItem: QueueItem = { ...updated, mistakes: 0, hinted: false };
+    // 过滤当前词的副本；同时折叠相邻重复（过滤可能让原本被当前词隔开的同词塌到一起）
+    const cleaned: QueueItem[] = [];
+    for (const it of rest) {
+      if (it.index === currentIdx) continue;
+      if (cleaned.length > 0 && cleaned[cleaned.length - 1].index === it.index) continue;
+      cleaned.push(it);
+    }
+    const updated: QueueItem = { ...item, mistakes: item.mistakes + 1, hinted: false };
+    const reviewItem: QueueItem = { index: currentIdx, mistakes: 0, hinted: false };
+    const pickBuffer = (): QueueItem | null => {
+      const wrongIndices = Object.keys(mistakeMap)
+        .map(Number)
+        .filter((idx) => idx !== currentIdx);
+      if (wrongIndices.length > 0) {
+        return { index: wrongIndices[0], mistakes: 0, hinted: false };
+      }
+      for (let i = 0; i < sourceWords.length; i++) {
+        if (i !== currentIdx) {
+          return { index: i, mistakes: 0, hinted: false };
+        }
+      }
+      return null;
+    };
     for (const offset of REVIEW_OFFSETS) {
       const pos = Math.min(offset, cleaned.length);
-      cleaned.splice(pos, 0, { ...reviewItem });
+      if (pos < cleaned.length) {
+        // 中间插入：cleaned 已过滤同词，左右一定不同，直接插
+        cleaned.splice(pos, 0, { ...reviewItem });
+        continue;
+      }
+      // 尾端 append：看最后一个（空时视为 updated）是不是同词
+      const last = cleaned.length > 0 ? cleaned[cleaned.length - 1] : updated;
+      if (last.index !== currentIdx) {
+        cleaned.push({ ...reviewItem });
+      } else {
+        const buffer = pickBuffer();
+        if (buffer) cleaned.push(buffer, { ...reviewItem });
+      }
     }
     setQueue([updated, ...cleaned]);
     setWrongCount((c) => c + 1);
     setMistakeMap((prev) => ({
       ...prev,
-      [word.english]: {
-        chinese: word.chinese,
-        count: (prev[word.english]?.count || 0) + 1,
+      [currentIdx]: {
+        count: (prev[currentIdx]?.count || 0) + 1,
+        hinted: prev[currentIdx]?.hinted,
       },
     }));
   }
 
   function onHint() {
-    const word = queue[0];
-    if (word.hinted) return;
-    const updated = { ...word, hinted: true };
-    const newQueue = [updated, ...queue.slice(1)];
-    setQueue(newQueue);
+    const item = queue[0];
+    if (item.hinted) return;
+    const updated = { ...item, hinted: true };
+    setQueue([updated, ...queue.slice(1)]);
     setMistakeMap((prev) => ({
       ...prev,
-      [word.english]: {
-        chinese: word.chinese,
-        count: (prev[word.english]?.count || 0) + 1,
+      [item.index]: {
+        count: (prev[item.index]?.count || 0) + 1,
         hinted: true,
       },
     }));
@@ -136,8 +184,13 @@ export default function App() {
     setWrongCount(0);
     setAnsweredCount(0);
     setMistakeMap({});
+    setFilename(undefined);
+    setUser(undefined);
+    setSourceWords([]);
     setPage("select");
   }, []);
+
+  const currentWord = queue.length > 0 ? sourceWords[queue[0].index] : null;
 
   return (
     <ConfigProvider locale={zhCN}>
@@ -154,7 +207,8 @@ export default function App() {
           {page === "select" && <SelectPage onStart={startQuiz} />}
           {page === "quiz" && (
             <QuizPage
-              queue={queue}
+              currentWord={currentWord}
+              queueLength={queue.length}
               totalOriginal={totalOriginal}
               correctCount={correctCount}
               wrongCount={wrongCount}
@@ -164,6 +218,7 @@ export default function App() {
               onHint={onHint}
               onFinish={onFinish}
               onQuit={onQuit}
+              onRefresh={refreshWords}
             />
           )}
           {page === "summary" && (
@@ -172,6 +227,7 @@ export default function App() {
               correctCount={correctCount}
               wrongCount={wrongCount}
               mistakeMap={mistakeMap}
+              sourceWords={sourceWords}
               onRestart={onQuit}
             />
           )}

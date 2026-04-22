@@ -11,7 +11,13 @@
       "Bash(curl --noproxy '*' -s -I http://127.0.0.1:5000/api/words/sample.txt)",
       "Bash(git init:*)",
       "Bash(git add:*)",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "PowerShell(Get-Command *)",
+      "PowerShell(npm *)",
+      "Bash(mkdir -p D:/wordquest/words/dylan D:/wordquest/words/kaylee)",
+      "Bash(mv D:/wordquest/words/*.txt D:/wordquest/words/dylan/)",
+      "Bash(export PATH=\"/c/Program Files/nodejs:$PATH\")",
+      "Bash(git *)"
     ]
   }
 }

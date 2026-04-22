@@ -1,6 +1,6 @@
 import { Card, Button, Typography, List, Tag } from "antd";
 import { TrophyOutlined, RedoOutlined } from "@ant-design/icons";
-import type { MistakeInfo } from "../types";
+import type { MistakeInfo, Word } from "../types";
 
 const { Title, Text } = Typography;
 
@@ -8,7 +8,8 @@ interface Props {
   totalOriginal: number;
   correctCount: number;
   wrongCount: number;
-  mistakeMap: Record<string, MistakeInfo>;
+  mistakeMap: Record<number, MistakeInfo>;
+  sourceWords: Word[];
   onRestart: () => void;
 }
 
@@ -17,11 +18,14 @@ export default function SummaryPage({
   correctCount,
   wrongCount,
   mistakeMap,
+  sourceWords,
   onRestart,
 }: Props) {
   const total = correctCount + wrongCount;
   const accuracy = total > 0 ? Math.round((correctCount / total) * 100) : 100;
-  const mistakes = Object.entries(mistakeMap).sort((a, b) => b[1].count - a[1].count);
+  const mistakes = Object.entries(mistakeMap)
+    .map(([idx, info]) => ({ idx: Number(idx), info }))
+    .sort((a, b) => b.info.count - a.info.count);
 
   return (
     <Card style={{ borderRadius: 16, textAlign: "center" }}>
@@ -55,22 +59,26 @@ export default function SummaryPage({
           <List
             size="small"
             dataSource={mistakes}
-            renderItem={([en, info]) => (
-              <List.Item
-                style={{
-                  background: "#fdf2f2",
-                  borderRadius: 8,
-                  marginBottom: 8,
-                  padding: "8px 16px",
-                }}
-              >
-                <Text strong style={{ color: "#c0392b" }}>
-                  {en}
-                </Text>
-                <Text type="secondary">{info.chinese}</Text>
-                <Tag color="red">错/提示 {info.count} 次</Tag>
-              </List.Item>
-            )}
+            renderItem={({ idx, info }) => {
+              const word = sourceWords[idx];
+              if (!word) return null;
+              return (
+                <List.Item
+                  style={{
+                    background: "#fdf2f2",
+                    borderRadius: 8,
+                    marginBottom: 8,
+                    padding: "8px 16px",
+                  }}
+                >
+                  <Text strong style={{ color: "#c0392b" }}>
+                    {word.english}
+                  </Text>
+                  <Text type="secondary">{word.chinese}</Text>
+                  <Tag color="red">错/提示 {info.count} 次</Tag>
+                </List.Item>
+              );
+            }}
           />
         </div>
       )}

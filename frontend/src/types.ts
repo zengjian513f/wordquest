@@ -3,7 +3,8 @@ export interface Word {
   chinese: string;
 }
 
-export interface QueueItem extends Word {
+export interface QueueItem {
+  index: number;
   mistakes: number;
   hinted: boolean;
 }
@@ -15,7 +16,6 @@ export interface WordlistInfo {
 }
 
 export interface MistakeInfo {
-  chinese: string;
   count: number;
   hinted?: boolean;
 }

@@ -1,7 +1,7 @@
 squirrel	松鼠
 rabbit	兔子
 cat	猫
-mouse (复数 mice)	老鼠
+mouse	老鼠
 dog	狗
 frog	青蛙
 day	白天；一天
@@ -46,7 +46,7 @@ card	卡片
 noodles	面条
 come	来
 love	爱
-dad	爸爸
+dad	爸爸（短）
 afternoon	下午
 share	分享
 his	他的

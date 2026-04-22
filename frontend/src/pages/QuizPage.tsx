@@ -7,13 +7,15 @@ import {
   LogoutOutlined,
   EnterOutlined,
   QuestionCircleOutlined,
+  ReloadOutlined,
 } from "@ant-design/icons";
-import type { QueueItem } from "../types";
+import type { Word } from "../types";
 
 const { Text } = Typography;
 
 interface Props {
-  queue: QueueItem[];
+  currentWord: Word | null;
+  queueLength: number;
   totalOriginal: number;
   correctCount: number;
   wrongCount: number;
@@ -23,10 +25,12 @@ interface Props {
   onHint: () => void;
   onFinish: () => void;
   onQuit: () => void;
+  onRefresh: () => void;
 }
 
 export default function QuizPage({
-  queue,
+  currentWord,
+  queueLength,
   totalOriginal,
   correctCount,
   wrongCount,
@@ -36,6 +40,7 @@ export default function QuizPage({
   onHint,
   onFinish,
   onQuit,
+  onRefresh,
 }: Props) {
   const [inputValue, setInputValue] = useState("");
   const prevInputRef = useRef("");
@@ -44,8 +49,7 @@ export default function QuizPage({
   const [showingHint, setShowingHint] = useState(false);
   const inputRef = useRef<InputRef>(null);
 
-  const currentWord = queue[0];
-  const dynamicTotal = answeredCount + queue.length;
+  const dynamicTotal = answeredCount + queueLength;
   const pct = dynamicTotal > 0 ? Math.round((answeredCount / dynamicTotal) * 100) : 0;
 
   const focusInput = useCallback(() => {
@@ -58,10 +62,10 @@ export default function QuizPage({
 
   // 队列空了 → 完成
   useEffect(() => {
-    if (queue.length === 0 && totalOriginal > 0) {
+    if (queueLength === 0 && totalOriginal > 0) {
       onFinish();
     }
-  }, [queue.length, totalOriginal, onFinish]);
+  }, [queueLength, totalOriginal, onFinish]);
 
   if (!currentWord) return null;
 
@@ -69,7 +73,7 @@ export default function QuizPage({
     if (disabled || showingHint || !inputValue.trim()) return;
     const answer = inputValue.trim().toLowerCase();
 
-    if (answer === currentWord.english.toLowerCase()) {
+    if (answer === currentWord!.english.toLowerCase()) {
       setFeedback("correct");
       setDisabled(true);
       setTimeout(() => {
@@ -93,7 +97,7 @@ export default function QuizPage({
     e.preventDefault();
     prevInputRef.current = inputValue;
     setShowingHint(true);
-    setInputValue(currentWord.english);
+    setInputValue(currentWord!.english);
     onHint();
   }
 
@@ -117,6 +121,13 @@ export default function QuizPage({
           showInfo={false}
           strokeColor={{ from: "#4ea8de", to: "#48bfe3" }}
           style={{ flex: 1, marginBottom: 0 }}
+        />
+        <Button
+          icon={<ReloadOutlined />}
+          type="text"
+          size="small"
+          onClick={onRefresh}
+          style={{ color: "#999", flexShrink: 0 }}
         />
         <Popconfirm
           title="确定要退出吗？"
